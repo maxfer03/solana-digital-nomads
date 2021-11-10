@@ -1,6 +1,30 @@
 import twitterLogo from "./assets/twitter-logo.svg";
+import idl from "./idl.json";
+import kp from "./keypair.json";
 import "./App.css";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { Program, Provider, web3 } from "@project-serum/anchor";
 import { useEffect, useState } from "react";
+
+// SystemProgram is a reference to the Solana runtime!
+const { SystemProgram, Keypair } = web3;
+
+// Create a keypair for the account that will hold the GIF data.
+//let baseAccount = Keypair.generate();
+const arr = Object.values(kp._keypair.secretKey);
+const secret = new Uint8Array(arr);
+const baseAccount = web3.Keypair.fromSecretKey(secret);
+
+// Get our program's id form the IDL file.
+const programID = new PublicKey(idl.metadata.address);
+
+// Set our network to devent.
+const network = clusterApiUrl("devnet");
+
+// Control's how we want to acknowledge when a trasnaction is "done".
+const opts = {
+  preflightCommitment: "processed",
+};
 
 // Constants
 const TWITTER_HANDLE = "_buildspace";
@@ -14,60 +38,9 @@ const App = () => {
     destination: "",
     txt: "",
   });
-  const [destinations, setDestinations] = useState([
-    {
-      url: "https://www.studentuniverse.com/blog/wp-content/uploads/2019/03/feat-1.jpg",
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://www.nordicviewband.com/wp-content/uploads/2019/06/nordic-view-sunset-boat-sea-1600x900.jpg",
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://media-cdn.tripadvisor.com/media/photo-s/0c/48/04/0e/kayak-views.jpg",
+  const [destinations, setDestinations] = useState([]);
+  const [acc, setAcc] = useState(false);
 
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://cdn.kimkim.com/files/a/content_articles/featured_photos/45a06fbfcf1c9e1774f4fedf2e5703040ee67bfd/big-232ba789711e4cd8cc7226ab5143eb6a.jpg",
-
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://www.studentuniverse.com/blog/wp-content/uploads/2019/03/feat-1.jpg",
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://www.nordicviewband.com/wp-content/uploads/2019/06/nordic-view-sunset-boat-sea-1600x900.jpg",
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://media-cdn.tripadvisor.com/media/photo-s/0c/48/04/0e/kayak-views.jpg",
-
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-    {
-      url: "https://cdn.kimkim.com/files/a/content_articles/featured_photos/45a06fbfcf1c9e1774f4fedf2e5703040ee67bfd/big-232ba789711e4cd8cc7226ab5143eb6a.jpg",
-
-      text: "User Text",
-      comment: "user comment!!",
-      adr: "User Adress",
-    },
-  ]);
   const checkWallet = async () => {
     try {
       const { solana } = window;
@@ -100,29 +73,109 @@ const App = () => {
     }
   };
 
+  const getProvider = () => {
+    const connection = new Connection(network, opts.preflightCommitment);
+    const provider = new Provider(
+      connection,
+      window.solana,
+      opts.preflightCommitment
+    );
+    return provider;
+  };
+
+  const createAccount = async () => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+      console.log("ping");
+      await program.rpc.initialize({
+        accounts: {
+          baseAccount: baseAccount.publicKey,
+          user: provider.wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        },
+        signers: [baseAccount],
+      });
+      console.log(
+        "Created a new BaseAccount w/ address:",
+        baseAccount.publicKey.toString()
+      );
+      setAcc(true);
+      await getDestinations();
+    } catch (error) {
+      console.log("Error creating BaseAccount account:", error);
+    }
+  };
+
+  const getDestinations = async () => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+      const account = await program.account.baseAccount.fetch(
+        baseAccount.publicKey
+      );
+
+      console.log("Got Acc", account);
+      setAcc(true);
+      setDestinations(destinations.concat(account.destinationList));
+    } catch (err) {
+      console.log(err);
+      setDestinations([]);
+    }
+  };
+
   const handleChange = (e) => {
     setUserInput({ ...userInput, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setDestinations([
-      {
-        url: userInput.url,
-        text: userInput.destination,
-        comment: userInput.txt,
-        adr: "123xzojj390nxf98",
-      },
-      ...destinations,
-    ]);
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+      let usrAdr = {
+        accounts: {
+          baseAccount: baseAccount.publicKey,
+          user: provider.wallet.publicKey,
+        },
+      };
+      setDestinations([
+        {
+          url: userInput.url,
+          text: userInput.destination,
+          comment: userInput.txt,
+          adr: usrAdr
+        },
+        ...destinations,
+      ]);
+
+      await program.rpc.addDestination(
+        userInput.url,
+        userInput.destination,
+        userInput.txt,
+        {
+          accounts: {
+            baseAccount: baseAccount.publicKey,
+          },
+        }
+      );
+      console.log("input successfuly sent to program");
+      await getDestinations();
+    } catch (err) {
+      console.log(err);
+    }
     setAddDestination(false);
   };
 
   useEffect(() => {
+    if (walletAddress) {
+      getDestinations();
+    }
     window.addEventListener("load", async (event) => {
       await checkWallet();
     });
-  });
+  }, [walletAddress]);
+
   return (
     <div className="App">
       <div className="container">
@@ -141,25 +194,29 @@ const App = () => {
           <p className="sub-text">
             Wanna travel somewhere? Share it with us through Solana 😎
           </p>
-          {walletAddress.length !== 0 && (
-            <button onClick={() => setAddDestination(true)}>
-              Add a destination
-            </button>
-          )}
+          {walletAddress.length !== 0 &&
+            (destinations.length === 0 && !acc ? (
+              <button onClick={createAccount}>Initialize Solana Account</button>
+            ) : (
+              <button onClick={() => setAddDestination(true)}>
+                Add a destination
+              </button>
+            ))}
         </div>
         <div className="imgs-container">
           {walletAddress.length !== 0 &&
-            destinations.map((el) => {
+            destinations.length !== 0 &&
+            destinations.map((el, idx) => {
               return (
-                <div className="each-img">
-                  <img src={el.url} alt={el.url} />
+                <div className="each-img" key={idx}>
+                  <img src={el.img} alt={el.img} />
                   <div className="img-text">
                     <div>
-                      <div>{el.text}</div>
+                      <div>{el.destination}</div>
                       <div>{el.comment}</div>
                     </div>
 
-                    <div>Address: {el.adr}</div>
+                    <div>Address: ... {/*el.adr*/}</div>
                   </div>
                 </div>
               );

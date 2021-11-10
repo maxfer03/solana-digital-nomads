@@ -7,7 +7,7 @@ import { Program, Provider, web3 } from "@project-serum/anchor";
 import { useEffect, useState } from "react";
 
 // SystemProgram is a reference to the Solana runtime!
-const { SystemProgram, Keypair } = web3;
+const { SystemProgram } = web3;
 
 // Create a keypair for the account that will hold the GIF data.
 //let baseAccount = Keypair.generate();
@@ -133,12 +133,12 @@ const App = () => {
     try {
       const provider = getProvider();
       const program = new Program(idl, programID, provider);
-      let usrAdr = {
-        accounts: {
-          baseAccount: baseAccount.publicKey,
-          user: provider.wallet.publicKey,
-        },
-      };
+      // let usrAdr = {
+      //   accounts: {
+      //     baseAccount: baseAccount.publicKey,
+      //     user: provider.wallet.publicKey,
+      //   },
+      // };
      
 
       await program.rpc.addDestination(

@@ -117,7 +117,7 @@ const App = () => {
 
       console.log("Got Acc", account);
       setAcc(true);
-      setDestinations(destinations.concat(account.destinationList));
+      setDestinations(account.destinationList);
     } catch (err) {
       console.log(err);
       setDestinations([]);
@@ -139,15 +139,7 @@ const App = () => {
           user: provider.wallet.publicKey,
         },
       };
-      setDestinations([
-        {
-          url: userInput.url,
-          text: userInput.destination,
-          comment: userInput.txt,
-          adr: usrAdr
-        },
-        ...destinations,
-      ]);
+     
 
       await program.rpc.addDestination(
         userInput.url,
@@ -160,6 +152,15 @@ const App = () => {
         }
       );
       console.log("input successfuly sent to program");
+      // setDestinations([
+      //   {
+      //     url: userInput.url,
+      //     text: userInput.destination,
+      //     comment: userInput.txt,
+      //     adr: usrAdr.toString(),
+      //   },
+      //   ...destinations,
+      // ]);
       await getDestinations();
     } catch (err) {
       console.log(err);
@@ -181,6 +182,7 @@ const App = () => {
       <div className="container">
         <div className="header-container">
           <p className="header">🖼 Digital Nomads</p>
+          <p>(styles not finished)</p>
           {walletAddress.length === 0 ? (
             <button
               className="cta-button connect-wallet-button"
@@ -215,8 +217,7 @@ const App = () => {
                       <div>{el.destination}</div>
                       <div>{el.comment}</div>
                     </div>
-
-                    <div>Address: ... {/*el.adr*/}</div>
+                    <div>Address: {/*el.usr.toString()*/ '...'} </div>
                   </div>
                 </div>
               );
@@ -243,7 +244,7 @@ const App = () => {
               name="url"
               value={userInput.url}
               onChange={(e) => handleChange(e)}
-              required="true"
+              required
             />
             <input
               className="text-input"
@@ -251,7 +252,7 @@ const App = () => {
               type="text"
               placeholder="Destination Name"
               onChange={(e) => handleChange(e)}
-              required="true"
+              required
             />
             <input
               className="text-input"

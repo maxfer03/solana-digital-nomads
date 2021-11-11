@@ -139,7 +139,6 @@ const App = () => {
       //     user: provider.wallet.publicKey,
       //   },
       // };
-     
 
       await program.rpc.addDestination(
         userInput.url,
@@ -179,13 +178,25 @@ const App = () => {
 
   return (
     <div className="App">
+      <div class="custom-shape-divider-top-1636668684">
+        <svg
+          data-name="Layer 1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"
+            class="shape-fill"
+          ></path>
+        </svg>
+      </div>
       <div className="container">
         <div className="header-container">
-          <p className="header">🖼 Digital Nomads</p>
-          <p>(styles not finished)</p>
+          <span className="header">🖼 Digital Nomads</span>
           {walletAddress.length === 0 ? (
             <button
-              className="cta-button connect-wallet-button"
+              className="multibutton"
               onClick={connectWallet}
             >
               Connect Phantom
@@ -198,9 +209,9 @@ const App = () => {
           </p>
           {walletAddress.length !== 0 &&
             (destinations.length === 0 && !acc ? (
-              <button onClick={createAccount}>Initialize Solana Account</button>
+              <button className="multibutton" onClick={createAccount}>Initialize Solana Account</button>
             ) : (
-              <button onClick={() => setAddDestination(true)}>
+              <button className="multibutton" onClick={() => setAddDestination(true)}>
                 Add a destination
               </button>
             ))}
@@ -211,27 +222,33 @@ const App = () => {
             destinations.map((el, idx) => {
               return (
                 <div className="each-img" key={idx}>
-                  <img src={el.img} alt={el.img} />
+                  <img
+                    src={el.img}
+                    alt={
+                      el.img.slice(12, 30) +
+                      "..." +
+                      el.img.slice(-5, el.img.length)
+                    }
+                  />
                   <div className="img-text">
                     <div>
                       <div>{el.destination}</div>
                       <div>{el.comment}</div>
                     </div>
-                    <div>Address: {/*el.usr.toString()*/ '...'} </div>
+                    <div>
+                      Address:{" "}
+                      {el.usr.toString().slice(0, 5) +
+                        "..." +
+                        el.usr
+                          .toString()
+                          .slice(-5, el.usr.toString().length)}{" "}
+                    </div>
                   </div>
                 </div>
               );
             })}
         </div>
-        <div className="footer-container">
-          <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
-          <a
-            className="footer-text"
-            href={TWITTER_LINK}
-            target="_blank"
-            rel="noreferrer"
-          >{`built on @${TWITTER_HANDLE}`}</a>
-        </div>
+        
       </div>
       {addDestination && (
         <div className="add-destination">

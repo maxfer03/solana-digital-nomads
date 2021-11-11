@@ -194,24 +194,27 @@ const App = () => {
       <div className="container">
         <div className="header-container">
           <span className="header">🖼 Digital Nomads</span>
+
+          <p className="sub-text">
+            Wanna travel somewhere? Share it with us through Solana 😎
+          </p>
           {walletAddress.length === 0 ? (
-            <button
-              className="multibutton"
-              onClick={connectWallet}
-            >
+            <button className="multibutton" onClick={connectWallet}>
               Connect Phantom
             </button>
           ) : (
             ""
           )}
-          <p className="sub-text">
-            Wanna travel somewhere? Share it with us through Solana 😎
-          </p>
           {walletAddress.length !== 0 &&
             (destinations.length === 0 && !acc ? (
-              <button className="multibutton" onClick={createAccount}>Initialize Solana Account</button>
+              <button className="multibutton" onClick={createAccount}>
+                Initialize Solana Account
+              </button>
             ) : (
-              <button className="multibutton" onClick={() => setAddDestination(true)}>
+              <button
+                className="multibutton"
+                onClick={() => setAddDestination(true)}
+              >
                 Add a destination
               </button>
             ))}
@@ -248,7 +251,6 @@ const App = () => {
               );
             })}
         </div>
-        
       </div>
       {addDestination && (
         <div className="add-destination">

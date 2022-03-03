@@ -1,5 +1,7 @@
 # buildspace Solana GIF Portal Project
 
+Check it out: https://solana-digital-nomads.vercel.app/
+
 ### **Welcome 👋**
 To get started with this course, clone this repo and follow these commands:
 
